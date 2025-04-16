@@ -1,0 +1,105 @@
+﻿@model List<CartItem>
+
+<h2>🛒 Giỏ hàng của bạn</h2>
+
+@if (!Model.Any())
+{
+    <p>Giỏ hàng trống</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sách</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Tổng tiền</th>
+                <th></th> <!-- Cột xóa -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-book-id="@item.BookId">
+                    <td>@item.BookTitle</td>
+                    <td>@item.Price.ToString("N0") đ</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary btn-decrease">-</button>
+                        <input type="text" value="@item.Quantity" class="quantity-input" readonly style="width: 40px; text-align:center;" />
+                        <button class="btn btn-sm btn-outline-secondary btn-increase">+</button>
+                    </td>
+                    <td class="item-total">@item.Total.ToString("N0") đ</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger btn-delete">Xóa</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between mt-4">
+        <a class="btn btn-outline-primary" asp-controller="Home" asp-action="Index">← Tiếp tục mua sắm</a>
+        <a class="btn btn-success" href="/Cart/Checkout">Thanh toán</a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function updateCartDisplay(bookId, quantity, total, cartCount) {
+                var row = $('tr[data-book-id="' + bookId + '"]');
+                row.find('.quantity-input').val(quantity);
+                row.find('.item-total').text(total.toLocaleString() + " đ");
+                $('#cart-count').text(cartCount);
+            }
+
+            // Tăng số lượng
+            $('.btn-increase').click(function () {
+                var row = $(this).closest('tr');
+                var bookId = row.data('book-id');
+                $.post('/Cart/IncreaseQuantity', { bookId: bookId }, function (res) {
+                    if (res.success) {
+                        updateCartDisplay(bookId, res.quantity, res.total, res.cartCount);
+                    }
+                });
+            });
+
+            // Giảm số lượng
+            $('.btn-decrease').click(function () {
+                var row = $(this).closest('tr');
+                var bookId = row.data('book-id');
+                $.post('/Cart/DecreaseQuantity', { bookId: bookId }, function (res) {
+                    if (res.success) {
+                        if (res.quantity > 0) {
+                            updateCartDisplay(bookId, res.quantity, res.total, res.cartCount);
+                        } else {
+                            row.remove();
+                            $('#cart-count').text(res.cartCount);
+                            if ($('tbody tr').length === 0) {
+                                $('table').after('<p>Giỏ hàng trống</p>');
+                                $('table').remove();
+                            }
+                        }
+                    }
+                });
+            });
+
+            // XÓA sản phẩm
+            $('.btn-delete').click(function () {
+                var row = $(this).closest('tr');
+                var bookId = row.data('book-id');
+                $.post('/Cart/RemoveFromCart', { bookId: bookId }, function (res) {
+                    if (res.success) {
+                        row.remove();
+                        $('#cart-count').text(res.cartCount);
+                        if ($('tbody tr').length === 0) {
+                            $('table').after('<p>Giỏ hàng trống</p>');
+                            $('table').remove();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

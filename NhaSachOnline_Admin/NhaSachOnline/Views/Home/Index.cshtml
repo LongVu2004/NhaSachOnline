@@ -1,0 +1,61 @@
+﻿@using NhaSachOnline.Models.DTO
+@model BookDislayModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center mt-2">
+    <h1 class="display-4 fw-bold">Book Store VTP</h1>
+</div>
+<div class="my-2">
+    <form asp-action="Index" method="get" class="row row-cols-lg-auto g-3 align-items-center">
+        <div class="col-12">
+            <input type="text" class="form-control" name="keySearch" placeholder="Tìm sách..." value="@Model.KeySearch" />
+        </div>
+        <div class="col-12">
+            <select class="form-select" name="genreId">
+                <option value="0" selected="@(!Model.GenreId.HasValue || Model.GenreId == 0)">Tất cả thể loại</option>
+                @foreach (var genre in Model.Genres)
+                {
+                    <option value="@genre.Id" selected="@(genre.Id == Model.GenreId)">@genre.GenreName</option>
+                }
+            </select>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+        </div>
+    </form>
+</div>
+
+<div class="row row-cols-1 row-cols-md-4 g-4 mt-4" style="margin: 100px;">
+    @foreach (var book in Model.Books)
+    {
+        <div class="col">
+            <div class="card h-100">
+                @* <p>@("/images/" + book.ImagePath)</p> *@
+                <img src="@("/images/" + book.ImagePath+ ".jpg")" class="card-img-top" alt="Ảnh sách" style="height: 300px; object-fit: cover;" />
+                <div class="card-body">
+                    <h5 class="card-title">@book.BookName</h5>
+                    <p class="card-text">
+                        <b>Thể loại:</b> @book.GenreName<br />
+                        <b>Tác giả:</b> @book.AuthorName<br />
+                        <b>Giá:</b> @book.Price vnđ <br />
+                    </p>
+                </div>
+                <div class="card-footer text-center">
+                    @if (book.Id > 0)
+                    {
+                        <button class="btn btn-success rounded-pill px-3 py-3 shadow-sm fw-semibold add-to-cart" data-id="@book.Id">
+                            <i class="bi bi-cart-plus me-1"></i> Thêm vào giỏ </button>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Hết hàng</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
